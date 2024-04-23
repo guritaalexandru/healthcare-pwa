@@ -1,15 +1,15 @@
 import React from "react";
 
-import DashboardPage from "@/js/Components/Pages/DashboardPage";
 import {getAllCollections} from "@/js/utils/database";
+import AllCollectionsPage from "@/js/Components/Pages/AllCollectionsPage";
 
 export const CollectionsContext = React.createContext({});
 
-export default function Home({collections}) {
+export default function Collections({collections}) {
   return (
         <CollectionsContext.Provider value={collections}>
           <main className="page-container relative">
-              <DashboardPage/>
+              <AllCollectionsPage/>
           </main>
         </CollectionsContext.Provider>
   );
