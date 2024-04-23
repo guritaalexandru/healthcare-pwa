@@ -2,18 +2,13 @@ import React, {useContext} from 'react';
 
 import GeneralLayout from "@/js/Components/Layout/GeneralLayout";
 import {ArticleContext} from "@/pages/article/[id]";
-import {extractHeadersWithAnchors, generateTocWithAnchors, markdownToHtml} from "@/js/utils/markdown";
+import {markdownToHtml} from "@/js/utils/markdown";
 
 export default function ArticlePage(props){
 	const article = useContext(ArticleContext);
-	const articleContent = article.content;
+	const articleContentMarkdown = article.content;
 
-	const contentHtml = markdownToHtml(articleContent);
-
-	const headers = extractHeadersWithAnchors(articleContent);
-	const toc = generateTocWithAnchors(headers);
-
-	const tocHtml = markdownToHtml(toc);
+	const {contentHtml, tableOfContents} = markdownToHtml(articleContentMarkdown);
 
 	return (
 		<GeneralLayout>
@@ -25,7 +20,25 @@ export default function ArticlePage(props){
 						</h1>
 					</div>
 					<div className={'content-container'}>
-						<div dangerouslySetInnerHTML={{__html: tocHtml}}/>
+						{
+							tableOfContents.length > 0 &&
+							<div className={'border border-gray-300 rounded p-4 mb-4'}>
+								<h2 className={'text-3xl font-bold'}>
+									Table of Contents
+								</h2>
+								<ul>
+									{tableOfContents.map((toc, index) => {
+										return (
+											<li key={index}>
+												<a href={'#' + toc.id}>
+													{toc.text}
+												</a>
+											</li>
+										)
+									})}
+								</ul>
+							</div>
+						}
 						<div dangerouslySetInnerHTML={{__html: contentHtml}}/>
 					</div>
 				</div>

@@ -1,46 +1,36 @@
-import {remark} from 'remark';
-import html from 'remark-html';
-import slug from 'remark-slug'; // Import remark-slug to generate IDs
-
-import {visit} from 'unist-util-visit';
+import rehypeSanitize from 'rehype-sanitize'
+import rehypeStringify from 'rehype-stringify'
+import remarkParse from 'remark-parse'
+import remarkRehype from 'remark-rehype'
+import {unified} from 'unified'
+import rehypeSlug from 'rehype-slug'
 
 function markdownToHtml(markdown) {
-  const processedContent = remark()
-      .use(html)
-      .use(slug)
+  let tableOfContents = [];
+  const contentHTML = unified()
+      .use(remarkParse)
+      .use(remarkRehype)
+      .use(rehypeSanitize)
+      .use(rehypeSlug)
+      .use(rehypeStringify)
+      .use(() => (tree) => {
+        tree.children.forEach((node) => {
+          if (node.type === 'element' && node.tagName && node.tagName.startsWith('h')) {
+            const headerLevel = parseInt(node.tagName.substring(1), 10);
+            const headerText = node.children.map((child) => child.value).join('');
+            const id = node.properties.id;
+            tableOfContents.push({ level: headerLevel, text: headerText, id });
+          }
+        });
+      })
       .processSync(markdown);
-  return processedContent.toString();
+
+    return {
+        contentHtml: contentHTML,
+      tableOfContents,
+    };
 }
-
-function extractHeadersWithAnchors(markdownString) {
-  const headers = [];
-  remark().use(() => (tree) => {
-    visit(tree, 'heading', (node) => {
-      const headerText = node.children.map((child) => child.value).join('');
-      const anchor = headerText.toLowerCase().replace(/\s+/g, '-');
-      headers.push({
-        level: node.depth,
-        text: headerText,
-        anchor: `#${anchor}`,
-      });
-    });
-  }).processSync(markdownString);
-
-  return headers;
-}
-
-function generateTocWithAnchors(headers) {
-  const toc = headers.map((header) => {
-    const indentation = '  '.repeat(header.level - 1);
-    return `${indentation}- [${header.text}](${header.anchor})`;
-  });
-
-  return toc.join('\n');
-}
-
 
 export {
   markdownToHtml,
-  extractHeadersWithAnchors,
-  generateTocWithAnchors,
 };
